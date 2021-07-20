@@ -152,11 +152,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Library\Search\Search Tree\BST\BST.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Library\Search\Search Tree\Traversal\Traversal.cpp" />
+    <ClCompile Include="test_main.cpp" />
     <ClCompile Include="Library\Search\Sequential Search\Sequential Search.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Library\Search\Search Tree\BST\BST.h" />
+    <ClInclude Include="Library\Search\Search Tree\Node\Node.h" />
+    <ClInclude Include="Library\Search\Search Tree\Traversal\Traversal.h" />
     <ClInclude Include="Library\Search\Sequential Search\Sequential Search.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

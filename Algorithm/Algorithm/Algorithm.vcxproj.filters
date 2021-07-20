@@ -18,10 +18,13 @@
     <ClCompile Include="Library\Search\Sequential Search\Sequential Search.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Library\Search\Search Tree\BST\BST.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Library\Search\Search Tree\BST\BST.cpp">
+    <ClCompile Include="Library\Search\Search Tree\Traversal\Traversal.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="test_main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -30,6 +33,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Library\Search\Search Tree\BST\BST.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Library\Search\Search Tree\Traversal\Traversal.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Library\Search\Search Tree\Node\Node.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

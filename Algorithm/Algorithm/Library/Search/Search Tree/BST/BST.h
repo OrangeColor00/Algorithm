@@ -1,35 +1,13 @@
 #pragma once
+#include "../Node/Node.h"
 
-template <typename T>
-struct Node
+enum State
 {
-	Node();
-	Node(T data);
-	Node(T data, Node *left, Node *right);
-	Node *_left;
-	Node *_right;
-	T _data;
+	LEFT,
+	RIGHT,
+	NULLPTR,
+	CONTINUE
 };
-
-template <typename T>
-Node<T>::Node()
-	:_left(nullptr), _right(nullptr)
-{
-
-}
-
-template <typename T>
-Node<T>::Node(T data)
-	:_data(data), _left(nullptr), _right(nullptr)
-{
-
-}
-
-template <typename T>
-Node<T>::Node(T data, Node *left, Node *right)
-	:_data(data), _left(left), _right(right)
-{
-}
 
 template <typename T>
 class BST
@@ -38,27 +16,34 @@ public:
 	BST();
 	BST(Node<T> *root);
 
-	Node<T> * SearchNode(T target);
-	bool Search(T target);				//Checking exist
-	bool AddNode(T data);				//if add success true, fail false
-	bool DeleteNode(T data);			//if delete success true, fail false
+	Node<T> * SearchNode(T target);				//Search node and get node
+	Node<T> ** SearchNodePtr(T target);			//Search node and get node pointer
+	bool Search(T target);						//Checking exist
+	bool AddNode(T data);						//if add success true, fail false
+	bool DeleteNode(T data);					//if delete success true, fail false
+	Node<T> * GetRoot();						//Get root node
 
 private:
 	Node<T> *_root;
 
-	bool CanSearch(T data, Node<T> *&node);
-	Node<T> * ReturnNode(T data, Node<T> *node);
-	bool ReturnFind(T data, Node<T> *node);
-	bool IsReft(T data, Node<T> *node);
-	bool IsRight(T data, Node<T> *node);
-	bool CanInsert(T data, Node<T> *&node);
-	void InsertNewNode(T data, Node<T> *node);
-	bool HaveNoNode(Node<T> *node);
-	bool HaveLeftNode(Node<T> *node);
-	bool HaveRightNode(Node<T> *node);
-	void ReplaceNode(Node<T> *&origianl, Node<T> *&replace);		//Replace Original to replace
-	void HaveTwoNodeDelete(Node<T> *&node);							//Delete Function if node to delete has two nodes
-	Node<T> * FindRightMinimum(Node<T> *node);
+	State GetNodeState(T data, Node<T> **node);					
+	void DeleteNode(Node<T> **node);						//free node memory and fill nullptr
+	void CopyNode(Node<T> *original, Node<T> *copy);		//deep copy node
+	bool CanSearch(T data, Node<T> *&node);					//Search node and return can search
+	State SearchPtr(T data, Node<T> **node);				//Search node and return node state
+	Node<T> * ReturnNode(Node<T> *node);					//Get node
+	Node<T> ** ReturnNodePtr(Node<T> *node, State state);	//Get node pointer
+	bool ReturnIsSearch(Node<T> *node);						//is node searched
+	bool IsLeft(T data, Node<T> *node);						//is data left node (for InsertNode)
+	bool IsRight(T data, Node<T> *node);					//is data right node (for InserNode)
+	bool CanInsert(T data, Node<T> *&node);					//can insert node
+	void InsertNewNode(T data, Node<T> *node);				//insert new node 
+	bool HaveNoNode(Node<T> *node);							//s node having no node
+	bool HaveLeftNode(Node<T> *node);						//is node having only left node
+	bool HaveRightNode(Node<T> *node);						//is node having only right node
+	void ReplaceNode(Node<T> *origianl, Node<T> **replace);		//Replace original node to replace node
+	void DeleteHaveTwoNode(Node<T> *&node);						//Delete node if node to delete has two nodes
+	Node<T> ** FindRightMinimum(Node<T> *node);					//Find Smallest node on the right
 };
 
 template <typename T>
@@ -74,13 +59,25 @@ BST<T>::BST(Node<T> *root)
 }
 
 template <typename T>
+Node<T> ** BST<T>::SearchNodePtr(T target)
+{
+	Node<T> *node = _root;
+	State state = CONTINUE;
+
+	while (state == CONTINUE)
+		state = SearchPtr(target, &node);
+
+	return ReturnNodePtr(node, state);
+}
+
+template <typename T>
 Node<T> * BST<T>::SearchNode(T target)
 {
 	Node<T> *node = _root;
 
 	while (CanSearch(target, node));
 
-	return ReturnNode(target, node);
+	return ReturnNode(node);
 }
 
 template <typename T>
@@ -90,7 +87,7 @@ bool BST<T>::Search(T target)
 
 	while (CanSearch(target, node));
 
-	return ReturnFind(target, node);
+	return ReturnIsSearch(node);
 }
 
 template <typename T>
@@ -110,43 +107,97 @@ bool BST<T>::AddNode(T data)
 template <typename T>
 bool BST<T>::DeleteNode(T data)
 {
-	Node<T> *node = SearchNode(data);
+	Node<T> ** node = SearchNodePtr(data);
 
 	if (node == nullptr)		return false;
-	if (HaveNoNode(node))		delete node;
-	else if (HaveLeftNode)		ReplaceNode(node, node->_left);
-	else if (HaveRightNode)		ReplaceNode(node, node->_right);
-	else						HaveTwoNodeDelete(node);
+	if (HaveNoNode(*node))		DeleteNode(node);
+	else if (HaveLeftNode(*node))		ReplaceNode(*node, &(node[0]->_left));
+	else if (HaveRightNode(*node))		ReplaceNode(*node, &(node[0]->_right));
+	else								DeleteHaveTwoNode(*node);
 
 	return true;
+}
+
+template <typename T>
+Node<T> * BST<T>::GetRoot()
+{
+	return _root;
+}
+
+template <typename T>
+State BST<T>::GetNodeState(T data, Node<T> ** node)
+{
+	if (*node == nullptr)	return NULLPTR;
+	if (node[0]->_left != nullptr)
+		if (data == node[0]->_left->_data)	return LEFT;
+	if (node[0]->_right != nullptr)
+		if (data == node[0]->_right->_data)	return RIGHT;
+	return CONTINUE;
+}
+
+template <typename T>
+void BST<T>::DeleteNode(Node<T> ** node)
+{
+	delete *node;
+	*node = nullptr;
+}
+
+template <typename T>
+void BST<T>::CopyNode(Node<T> *original, Node<T> *copy)
+{
+	original->_data = copy->_data;
+	original->_left = copy->_left;
+	original->_right = copy->_right;
 }
 
 template <typename T>
 bool BST<T>::CanSearch(T data, Node<T> *&node)
 {
+	if (node == nullptr)		return false;
 	if (data == node->_data)	return false;
 	if (data < node->_data)	node = node->_left;
 	else	node = node->_right;
-
 	return true;
 }
 
 template <typename T>
-Node<T> * BST<T>::ReturnNode(T data, Node<T> *node)
+State BST<T>::SearchPtr(T data, Node<T> **node)
 {
-	if (data == node->_data)	return node;
-	return nullptr;
+	State state = GetNodeState(data, node);
+	if (state != CONTINUE)		return state;
+	if (data < node[0]->_data)	*node = node[0]->_left;
+	else	*node = node[0]->_right;
+
+	return CONTINUE;
 }
 
 template <typename T>
-bool BST<T>::ReturnFind(T data, Node<T> *node)
+Node<T> ** BST<T>::ReturnNodePtr(Node<T> *node, State state)
 {
-	if (data == node->_data)	return true;
-	return false;
+	Node<T> **node_ptr = nullptr;
+	if (state == NULLPTR) return nullptr;
+	if (state == LEFT)	node_ptr = &(node->_left);
+	else if (state == RIGHT)	node_ptr = &(node->_right);
+
+	return node_ptr;
 }
 
 template <typename T>
-bool BST<T>::IsReft(T data, Node<T> *node)
+Node<T> * BST<T>::ReturnNode(Node<T> *node)
+{
+	if (node == nullptr)		return nullptr;
+	return node;
+}
+
+template <typename T>
+bool BST<T>::ReturnIsSearch(Node<T> *node)
+{
+	if (node == nullptr)		return false;
+	return true;
+}
+
+template <typename T>
+bool BST<T>::IsLeft(T data, Node<T> *node)
 {
 	if (data > node->_data)			return false;
 	if (node->_left == nullptr)		return false;
@@ -165,7 +216,7 @@ template <typename T>
 bool BST<T>::CanInsert(T data, Node<T> *&node)
 {
 	if (data == node->_data)		return true;
-	if (IsReft(data, node))			node = node->_left;
+	if (IsLeft(data, node))			node = node->_left;
 	else if (IsRight(data, node))	node = node->_right;
 	else							return true;
 
@@ -206,28 +257,28 @@ bool BST<T>::HaveRightNode(Node<T> *node)
 }
 
 template <typename T>
-void BST<T>::ReplaceNode(Node<T> *&original, Node<T> *&replace)
+void BST<T>::ReplaceNode(Node<T> *original, Node<T> **replace)
 {
-	Node<T> *temp = replace;
-	delete original;
-	original = replace;
+	CopyNode(original, *replace);
+	DeleteNode(replace);
 }
 
 template <typename T>
-void BST<T>::HaveTwoNodeDelete(Node<T> *&node)
+void BST<T>::DeleteHaveTwoNode(Node<T> *&node)
 {
-	Node<T> *right_minimum = FindRightMinimum(node);
+	Node<T> **right_minimum = FindRightMinimum(node);
 
-	node->_data = right_minimum->_data;
+	node->_data = right_minimum[0]->_data;
 
-	if (right_minimum->_right == nullptr)	delete right_minimum;
-	else									ReplaceNode(right_minimum, right_minimum->_right);
+	if (right_minimum[0]->_right == nullptr)	DeleteNode(right_minimum);
+	else			ReplaceNode(*right_minimum, &(right_minimum[0]->_right));
 }
 
 template <typename T>
-Node<T> * BST<T>::FindRightMinimum(Node<T> *node)
+Node<T> ** BST<T>::FindRightMinimum(Node<T> *node)
 {
+	if (node->_right->_left == nullptr)	return &(node->_right);
 	node = node->_right;
-	while (node->_left != nullptr)	node = node->_left;
-	return node;
+	while (node->_left->_left != nullptr) node = node->_left;
+	return &(node->_left);
 }
